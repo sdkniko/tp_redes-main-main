@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Usuarios</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<h1>Lista de Usuarios</h1>
+
+<div class="button-container">
+    <a href="create_user.html">Crear Usuario</a>
+</div>
+
+<h2>Usuarios Activos</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Dirección</th>
+            <th>Usuario</th>
+            <th>Rol</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody id="activeUsersTable"></tbody>
+</table>
+<h2>Usuarios Inactivos</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Apellido</th>
+            <th>Dirección</th>
+            <th>Usuario</th>
+            <th>Rol</th>
+            <th>Acción</th>
+        </tr>
+    </thead>
+    <tbody id="inactiveUsersTable"></tbody>
+</table>
+
+<script>
+
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+
+        window.location.href = 'login.html';
+    } else {
+
+        fetch('http://localhost:3000/usuarios', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const activeUsersTable = document.getElementById('activeUsersTable');
+                const inactiveUsersTable = document.getElementById('inactiveUsersTable');
+
+                data.forEach(user => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+              <td>${user.nombre}</td>
+              <td>${user.apellido}</td>
+              <td>${user.direccion}</td>
+              <td>${user.user}</td>
+              <td>${user.rol}</td>
+              <td>
+                <button class="status-button ${user.estado === 'activo' ? '' : 'inactive'}" onclick="changeUserStatus('${user._id}', '${user.estado === 'activo' ? 'inactivo' : 'activo'}')">
+                  ${user.estado === 'activo' ? 'Desactivar' : 'Activar'}
+                </button>
+              </td>
+            `;
+
+                    if (user.estado === 'activo') {
+                        activeUsersTable.appendChild(row);
+                    } else {
+                        inactiveUsersTable.appendChild(row);
+                    }
+                });
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+
+    function changeUserStatus(userId, newStatus) {
+        const endpoint = newStatus === 'activo' ? 'activar' : 'cambiar-estado';
+        fetch(`http://localhost:3000/usuarios/${userId}/${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Estado del usuario actualizado:', data);
+                location.reload(); 
+            })
+            .catch(error => console.error('Error:', error));
+    }
+</script>
+</body>
+
+</html>
